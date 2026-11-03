@@ -14,12 +14,32 @@ const IS_PROD = process.env.NODE_ENV === 'production';
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
-// Serve uploaded QR images statically from public/uploads
-const uploadsDir = path.resolve(__dirname, 'public/uploads');
+// CORS & JSON content-type guarantee for API
+app.use('/api', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
+
+// Serve public directory and static images statically
+const publicDir = path.resolve(__dirname, 'public');
+const uploadsDir = path.resolve(publicDir, 'uploads');
+const srcAssetsDir = path.resolve(__dirname, 'src/assets');
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+app.use(express.static(publicDir));
 app.use('/uploads', express.static(uploadsDir));
+app.use('/images', express.static(path.resolve(publicDir, 'images')));
+app.use('/assets', express.static(path.resolve(publicDir, 'assets')));
+app.use('/src/assets', express.static(srcAssetsDir));
 
 // Token helper for simple secure admin session
 const ADMIN_TOKEN_SECRET = 'friendship-cafe-retro-pop-secret-token-2026';
@@ -191,20 +211,28 @@ app.get('/api/leaderboard', (_req, res) => {
 
 // Admin Login
 app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    res.status(400).json({ error: 'Vui lòng nhập tên đăng nhập và mật khẩu' });
-    return;
-  }
+  try {
+    const rawUsername = req.body?.username;
+    const rawPassword = req.body?.password;
+    const username = typeof rawUsername === 'string' ? rawUsername.trim() : '';
+    const password = typeof rawPassword === 'string' ? rawPassword.trim() : '';
 
-  if (username === 'admin' && db.verifyAdmin(password)) {
-    res.json({
-      success: true,
-      token: ADMIN_TOKEN_SECRET,
-      user: { username: 'admin', role: 'admin' },
-    });
-  } else {
-    res.status(401).json({ error: 'Tên đăng nhập hoặc mật khẩu quản trị không đúng' });
+    if (!username || !password) {
+      res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu' });
+      return;
+    }
+
+    if (username === 'admin' && db.verifyAdmin(password)) {
+      res.json({
+        success: true,
+        token: ADMIN_TOKEN_SECRET,
+        user: { username: 'admin', role: 'admin' },
+      });
+    } else {
+      res.status(401).json({ success: false, error: 'Tên đăng nhập hoặc mật khẩu quản trị không đúng' });
+    }
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Lỗi xử lý đăng nhập' });
   }
 });
 
@@ -485,6 +513,20 @@ app.get('/api/admin/supabase-sql', adminAuthMiddleware, (_req, res) => {
   } catch (e: any) {
     res.status(500).send(e.message);
   }
+});
+
+// Catch-all for API routes: ALWAYS return JSON, never HTML
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: `Không tìm thấy endpoint API: ${req.method} ${req.path}` });
+});
+
+// Global API error handler: ALWAYS return JSON, never HTML
+app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+  console.error('API Error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Lỗi máy chủ nội bộ' });
 });
 
 // ==========================================

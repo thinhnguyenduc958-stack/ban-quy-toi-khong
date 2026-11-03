@@ -4,6 +4,7 @@ import { playBoing } from '../utils/audio';
 import { Product } from '../types';
 import { formatVND } from '../utils/format';
 import { useCart } from '../context/CartContext';
+import heroPopArtImage from '../assets/images/hero_pop_art_cafe_1793702876689.jpg';
 
 interface HomePageProps {
   onNavigateToMenu: () => void;
@@ -30,6 +31,9 @@ export const HomePage: React.FC<HomePageProps> = ({
   const { addToCart } = useCart();
   const [funnyModalOpen, setFunnyModalOpen] = useState(false);
   const [currentFunnyQuote, setCurrentFunnyQuote] = useState('');
+  const [heroImageSrc, setHeroImageSrc] = useState<string>(heroPopArtImage);
+  const [heroImageError, setHeroImageError] = useState(false);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
 
   const handleNotFriendlyClick = () => {
     playBoing();
@@ -108,15 +112,47 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <div className="absolute inset-0 bg-[#2678F3] rounded-3xl border-4 border-[#171717] translate-x-3 translate-y-3" />
                 
                 {/* Main Image Container */}
-                <div className="relative bg-white rounded-3xl border-4 border-[#171717] overflow-hidden shadow-pop-xl p-2">
-                  <img
-                    src="/src/assets/images/hero_pop_art_cafe_1793702876689.jpg"
-                    alt="Quán nước Friendship Café Retro Pop Art"
-                    className="w-full h-auto aspect-video sm:aspect-[4/3] object-cover rounded-2xl border-2 border-[#171717]"
-                    referrerPolicy="no-referrer"
-                  />
+                <div className="relative bg-white rounded-3xl border-4 border-[#171717] overflow-hidden shadow-pop-xl p-2 min-h-[240px] sm:min-h-[320px] flex items-center justify-center">
+                  {!heroImageError ? (
+                    <img
+                      src={heroImageSrc}
+                      alt="Quán nước Friendship Café Retro Pop Art"
+                      width={800}
+                      height={600}
+                      loading="eager"
+                      fetchPriority="high"
+                      onLoad={() => setHeroImageLoaded(true)}
+                      onError={() => {
+                        // If bundled asset fails, try public URL fallback; if that fails too, show SVG fallback
+                        if (heroImageSrc !== '/images/hero_pop_art_cafe_1793702876689.jpg') {
+                          setHeroImageSrc('/images/hero_pop_art_cafe_1793702876689.jpg');
+                        } else {
+                          setHeroImageError(true);
+                        }
+                      }}
+                      className={`w-full h-auto aspect-video sm:aspect-[4/3] object-cover rounded-2xl border-2 border-[#171717] transition-opacity duration-300 ${
+                        heroImageLoaded ? 'opacity-100' : 'opacity-95'
+                      }`}
+                    />
+                  ) : (
+                    /* High-Fidelity Retro Pop Art Diner Fallback Illustration */
+                    <div className="w-full aspect-video sm:aspect-[4/3] rounded-2xl border-2 border-[#171717] bg-[#FFE14D] p-6 flex flex-col items-center justify-center text-center relative overflow-hidden select-none">
+                      <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-[#FF70A6] rounded-full border-4 border-[#171717] opacity-70" />
+                      <div className="absolute -left-8 -top-8 w-28 h-28 bg-[#2678F3] rounded-full border-4 border-[#171717] opacity-70" />
+                      <div className="relative z-10 space-y-2">
+                        <div className="text-5xl sm:text-6xl animate-bounce">🥤✨🍔</div>
+                        <h3 className="font-comic text-2xl sm:text-3xl font-black text-[#171717] uppercase drop-shadow-[2px_2px_0px_#FFF]">
+                          FRIENDSHIP CAFÉ
+                        </h3>
+                        <div className="inline-block px-3 py-1 bg-white border-2 border-[#171717] rounded-full font-comic text-xs sm:text-sm font-black text-[#F44336] shadow-pop-sm">
+                          RETRO POP ART DINER
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Floating comic speech bubble sticker */}
-                  <div className="absolute top-4 right-4 bg-[#FFE14D] border-3 border-[#171717] px-3 py-1.5 rounded-2xl shadow-pop text-xs font-comic font-black text-[#171717] rotate-3 flex items-center gap-1.5">
+                  <div className="absolute top-4 right-4 bg-[#FFE14D] border-3 border-[#171717] px-3 py-1.5 rounded-2xl shadow-pop text-xs font-comic font-black text-[#171717] rotate-3 flex items-center gap-1.5 z-10">
                     <Heart className="w-4 h-4 fill-[#F44336] text-[#F44336]" />
                     <span>NUÔI TÔI ĐI BẠN ƠI!</span>
                   </div>

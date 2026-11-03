@@ -127,8 +127,16 @@ export const MenuPage: React.FC<MenuPageProps> = ({ products, categories }) => {
                     <img
                       src={product.image_url}
                       alt={product.name}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        if (product.image_url.includes('street_snack')) {
+                          e.currentTarget.src = '/images/product_street_snack_1793702876247.jpg';
+                        } else {
+                          e.currentTarget.src = '/images/product_bubble_tea_1793702875693.jpg';
+                        }
+                      }}
                     />
 
                     {/* Price Tag Badge */}

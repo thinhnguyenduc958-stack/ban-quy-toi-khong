@@ -26,6 +26,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   const [passwordInput, setPasswordInput] = useState('admin123');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [verifyingAuth, setVerifyingAuth] = useState(false);
 
   // Active Admin Tab
   const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'products' | 'bank' | 'audit' | 'supabase'>('dashboard');
@@ -78,15 +79,96 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   const [supabaseSql, setSupabaseSql] = useState('');
   const [copiedSql, setCopiedSql] = useState(false);
 
-  // Initial load when logged in
+  const handleLogout = (msg?: string | React.MouseEvent) => {
+    localStorage.removeItem('friendship_admin_token');
+    setToken(null);
+    if (typeof msg === 'string') {
+      setLoginError(msg);
+    } else {
+      setLoginError(null);
+    }
+  };
+
+  // Safe fetch helper that guarantees JSON parsing and eliminates <!DOCTYPE HTML syntax errors
+  const safeAdminFetch = async (url: string, options: RequestInit = {}) => {
+    const headers = new Headers(options.headers || {});
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const res = await fetch(url, { ...options, headers });
+    const contentType = res.headers.get('content-type') || '';
+    let data: any = null;
+
+    if (contentType.includes('application/json')) {
+      try {
+        data = await res.json();
+      } catch (err: any) {
+        throw new Error('Dữ liệu trả về từ máy chủ không đúng chuẩn JSON');
+      }
+    } else {
+      const text = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        handleLogout('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+        throw new Error('Phiên đăng nhập không hợp lệ');
+      }
+      throw new Error(`Máy chủ không phản hồi JSON (Mã ${res.status}): ${text.slice(0, 80)}`);
+    }
+
+    if (res.status === 401 || res.status === 403) {
+      handleLogout(data?.error || 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+      throw new Error(data?.error || 'Phiên đăng nhập không hợp lệ');
+    }
+
+    if (!res.ok) {
+      throw new Error(data?.error || `Lỗi máy chủ (${res.status})`);
+    }
+
+    return data;
+  };
+
+  // Verify token on mount / refresh and load data if valid
   useEffect(() => {
     if (token) {
-      fetchDashboardStats();
-      fetchOrders();
-      fetchAdminProducts();
-      fetchBankSettings();
-      fetchAuditLogs();
-      fetchSupabaseSql();
+      let isMounted = true;
+      setVerifyingAuth(true);
+
+      fetch('/api/admin/verify', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          const contentType = res.headers.get('content-type') || '';
+          if (contentType.includes('application/json') && res.ok) {
+            const data = await res.json();
+            if (data.valid && isMounted) {
+              fetchDashboardStats();
+              fetchOrders();
+              fetchAdminProducts();
+              fetchBankSettings();
+              fetchAuditLogs();
+              fetchSupabaseSql();
+              return;
+            }
+          }
+          if (isMounted) {
+            handleLogout('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          }
+        })
+        .catch((err) => {
+          console.error('Lỗi kiểm tra token:', err);
+          if (isMounted) {
+            handleLogout('Không thể xác thực phiên đăng nhập.');
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setVerifyingAuth(false);
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
     }
   }, [token]);
 
@@ -96,94 +178,89 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setLoginError(null);
 
     try {
+      const username = usernameInput.trim();
+      const password = passwordInput.trim();
+
+      if (!username || !password) {
+        throw new Error('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu');
+      }
+
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+        body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Đăng nhập không thành công');
+
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = null;
+
+      if (contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch (err: any) {
+          throw new Error('Không thể đọc phản hồi JSON từ máy chủ');
+        }
+      } else {
+        const text = await res.text();
+        throw new Error(`Máy chủ không phản hồi JSON (Mã ${res.status}): ${text.slice(0, 100)}`);
       }
+
+      if (!res.ok || !data?.token) {
+        throw new Error(data?.error || 'Tên đăng nhập hoặc mật khẩu không chính xác');
+      }
+
       localStorage.setItem('friendship_admin_token', data.token);
       setToken(data.token);
+      setLoginError(null);
     } catch (err: any) {
-      setLoginError(err.message);
+      setLoginError(err.message || 'Đăng nhập không thành công');
     } finally {
       setLoginLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('friendship_admin_token');
-    setToken(null);
-  };
-
   const fetchDashboardStats = async () => {
     try {
-      const res = await fetch('/api/admin/stats', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch (e) {
-      console.error(e);
+      const data = await safeAdminFetch('/api/admin/stats');
+      setStats(data);
+    } catch (e: any) {
+      console.error('fetchDashboardStats error:', e.message);
     }
   };
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`/api/admin/orders?status=${statusFilter}&search=${encodeURIComponent(searchQuery)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setOrders(data);
-      }
-    } catch (e) {
-      console.error(e);
+      const data = await safeAdminFetch(`/api/admin/orders?status=${statusFilter}&search=${encodeURIComponent(searchQuery)}`);
+      setOrders(data);
+    } catch (e: any) {
+      console.error('fetchOrders error:', e.message);
     }
   };
 
   const fetchAdminProducts = async () => {
     try {
-      const res = await fetch('/api/admin/products', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAdminProducts(data);
-      }
-    } catch (e) {
-      console.error(e);
+      const data = await safeAdminFetch('/api/admin/products');
+      setAdminProducts(data);
+    } catch (e: any) {
+      console.error('fetchAdminProducts error:', e.message);
     }
   };
 
   const fetchBankSettings = async () => {
     try {
-      const res = await fetch('/api/bank-settings');
-      if (res.ok) {
-        const data = await res.json();
-        setBankSettings(data);
-      }
-    } catch (e) {
-      console.error(e);
+      const data = await safeAdminFetch('/api/bank-settings');
+      setBankSettings(data);
+    } catch (e: any) {
+      console.error('fetchBankSettings error:', e.message);
     }
   };
 
   const fetchAuditLogs = async () => {
     try {
-      const res = await fetch('/api/admin/audit-logs', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAuditLogs(data);
-      }
-    } catch (e) {
-      console.error(e);
+      const data = await safeAdminFetch('/api/admin/audit-logs');
+      setAuditLogs(data);
+    } catch (e: any) {
+      console.error('fetchAuditLogs error:', e.message);
     }
   };
 
@@ -419,6 +496,27 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       console.error(e);
     }
   };
+
+  // ==========================================
+  // RENDER: LOADING STATE WHILE VERIFYING TOKEN
+  // ==========================================
+  if (verifyingAuth) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="w-full max-w-md bg-[#FFF4DF] rounded-3xl border-4 border-[#171717] shadow-pop-xl p-6 sm:p-8 space-y-4 text-center">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FFE14D] border-3 border-[#171717] shadow-pop-sm flex items-center justify-center text-3xl animate-bounce">
+            🔐
+          </div>
+          <h2 className="font-comic text-xl font-black text-[#171717]">
+            ĐANG KIỂM TRA PHIÊN QUẢN TRỊ...
+          </h2>
+          <p className="text-xs text-gray-700 font-medium">
+            Hệ thống đang xác thực quyền truy cập
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // ==========================================
   // RENDER: LOGIN MODAL IF NOT LOGGED IN
