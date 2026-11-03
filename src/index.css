@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --pop-yellow: #FFE14D;
+    --comic-red: #F44336;
+    --electric-blue: #2678F3;
+    --pop-pink: #FF70A6;
+    --cream: #FFF4DF;
+    --ink-black: #171717;
+  }
+
+  body {
+    background-color: var(--cream);
+    color: var(--ink-black);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+/* Custom comic fonts and effects */
+.font-comic {
+  font-family: 'Bungee', cursive, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.font-display {
+  font-family: 'Fredoka', cursive, sans-serif;
+}
+
+/* Pop Art Halftone Dot Backgrounds */
+.bg-halftone-yellow {
+  background-color: #FFE14D;
+  background-image: radial-gradient(#F44336 15%, transparent 16%);
+  background-size: 16px 16px;
+}
+
+.bg-halftone-cream {
+  background-color: #FFF4DF;
+  background-image: radial-gradient(#171717 10%, transparent 11%);
+  background-size: 20px 20px;
+}
+
+.bg-halftone-blue {
+  background-color: #2678F3;
+  background-image: radial-gradient(#FFE14D 15%, transparent 16%);
+  background-size: 18px 18px;
+}
+
+.bg-halftone-pink {
+  background-color: #FF70A6;
+  background-image: radial-gradient(#171717 12%, transparent 13%);
+  background-size: 18px 18px;
+}
+
+/* Comic / Pop Art Hard Drop Shadows */
+.shadow-pop {
+  box-shadow: 4px 4px 0px #171717;
+}
+
+.shadow-pop-lg {
+  box-shadow: 6px 6px 0px #171717;
+}
+
+.shadow-pop-xl {
+  box-shadow: 8px 8px 0px #171717;
+}
+
+.shadow-pop-sm {
+  box-shadow: 2px 2px 0px #171717;
+}
+
+.shadow-pop-hover:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #171717;
+}
+
+.shadow-pop-hover:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px #171717;
+}
+
+/* Comic Speech Bubble Tails */
+.speech-bubble-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -16px;
+  left: 28px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 16px 12px 0 12px;
+  border-color: #FFF4DF transparent transparent transparent;
+}
+
+.speech-bubble-bottom-border::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 26px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 20px 14px 0 14px;
+  border-color: #171717 transparent transparent transparent;
+  z-index: 0;
+}
+
+/* Comic Action Starburst */
+.clip-starburst {
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
+    50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+  );
+}
+
+/* Sound and sticker animations */
+@keyframes comic-wobble {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+.animate-wobble {
+  animation: comic-wobble 3s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}

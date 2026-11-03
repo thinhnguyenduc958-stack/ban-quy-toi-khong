@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "BẠN QUÝ TÔI KHÔNG? | Friendship Café",
+  "short_name": "Bạn Quý Tôi",
+  "description": "Cửa hàng đồ ăn vặt & nước uống Retro Pop Art - Nuôi chủ quán hôm nay!",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF4DF",
+  "theme_color": "#FFE14D",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

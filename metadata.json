@@ -1,0 +1,6 @@
+{
+  "name": "BẠN QUÝ TÔI KHÔNG? | Friendship Café",
+  "description": "Cửa hàng đồ ăn vặt & nước uống Retro Pop Art - Nơi bạn bè mời chủ quán đồ ăn ngon, quét mã VietQR và nhận lời tri ân hài hước!",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#FFE14D" stroke="#171717" stroke-width="24"/>
+  <!-- Halftone / Comic dots pattern -->
+  <g fill="#F44336" opacity="0.15">
+    <circle cx="80" cy="80" r="14"/>
+    <circle cx="160" cy="80" r="14"/>
+    <circle cx="240" cy="80" r="14"/>
+    <circle cx="320" cy="80" r="14"/>
+    <circle cx="400" cy="80" r="14"/>
+    <circle cx="80" cy="160" r="14"/>
+    <circle cx="400" cy="160" r="14"/>
+    <circle cx="80" cy="400" r="14"/>
+    <circle cx="160" cy="400" r="14"/>
+    <circle cx="240" cy="400" r="14"/>
+    <circle cx="320" cy="400" r="14"/>
+    <circle cx="400" cy="400" r="14"/>
+  </g>
+  <!-- Comic Starburst badge in center -->
+  <path d="M256 90 L285 155 L356 142 L345 213 L413 238 L370 297 L413 356 L345 381 L356 452 L285 439 L256 504 L227 439 L156 452 L167 381 L99 356 L142 297 L99 238 L167 213 L156 142 L227 155 Z" fill="#FF70A6" stroke="#171717" stroke-width="18" stroke-linejoin="round"/>
+  <!-- Boba Cup / Coffee Diner Graphic -->
+  <g transform="translate(186, 170)">
+    <!-- Cup body -->
+    <path d="M15 70 L30 220 C32 235 50 245 70 245 C90 245 108 235 110 220 L125 70 Z" fill="#FFF4DF" stroke="#171717" stroke-width="16" stroke-linejoin="round"/>
+    <!-- Lid -->
+    <path d="M5 70 C5 35 135 35 135 70 Z" fill="#2678F3" stroke="#171717" stroke-width="16"/>
+    <!-- Straw -->
+    <path d="M70 40 L95 -40 L125 -30 L100 40" fill="#F44336" stroke="#171717" stroke-width="14" stroke-linejoin="round"/>
+    <!-- Heart sticker on cup -->
+    <path d="M70 145 C60 120 25 125 25 155 C25 180 70 205 70 205 C70 205 115 180 115 155 C115 125 80 120 70 145 Z" fill="#F44336" stroke="#171717" stroke-width="10"/>
+    <!-- Boba pearls -->
+    <circle cx="50" cy="210" r="10" fill="#171717"/>
+    <circle cx="72" cy="218" r="10" fill="#171717"/>
+    <circle cx="92" cy="210" r="10" fill="#171717"/>
+  </g>
+</svg>
