@@ -198,6 +198,15 @@ export const HomePage: React.FC<HomePageProps> = ({
                     alt={prod.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      if (prod.category_id === 'cat-combo' || prod.image_url.includes('hero')) {
+                        e.currentTarget.src = '/images/hero_pop_art_cafe_1793702876689.jpg';
+                      } else if (prod.category_id === 'cat-do-an-vat' || prod.image_url.includes('street_snack')) {
+                        e.currentTarget.src = '/images/product_street_snack_1793702876247.jpg';
+                      } else {
+                        e.currentTarget.src = '/images/product_bubble_tea_1793702875693.jpg';
+                      }
+                    }}
                   />
                   <span className="absolute top-3 left-3 bg-[#FFE14D] font-comic text-xs font-black px-2.5 py-1 rounded-xl border-2 border-[#171717] shadow-pop-sm">
                     {formatVND(prod.price)}
@@ -247,10 +256,13 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           <div className="shrink-0 z-10 w-44 sm:w-56">
             <img
-              src="/src/assets/images/hall_of_fame_trophy_1793702875889.jpg"
+              src="/images/hall_of_fame_trophy_1793702875889.jpg"
               alt="Cúp vàng tình bạn"
               className="w-full h-auto rounded-2xl border-4 border-[#171717] shadow-pop-lg rotate-2"
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.src = '/src/assets/images/hall_of_fame_trophy_1793702875889.jpg';
+              }}
             />
           </div>
         </div>

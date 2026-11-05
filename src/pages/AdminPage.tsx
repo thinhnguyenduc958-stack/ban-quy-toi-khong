@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck, Lock, LogOut, DollarSign, Clock, CheckCircle2,
   AlertCircle, Package, Settings, FileText, Search, Plus, Edit2,
-  Trash2, Eye, QrCode, Database, KeyRound, Loader2, Check,
+  Trash2, Eye, EyeOff, QrCode, Database, KeyRound, Loader2, Check,
   UploadCloud, Image as ImageIcon, RefreshCw, XCircle, Sparkles
 } from 'lucide-react';
 import { Order, BankSettings, Product, Category, AuditLog, DashboardStats, PaymentQrMode } from '../types';
@@ -20,10 +20,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   categories,
   onRefreshProducts,
 }) => {
-  // Auth state
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('friendship_admin_token'));
+  // Auth state - persists securely via session/local storage
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem('friendship_admin_token') || sessionStorage.getItem('friendship_admin_token')
+  );
   const [usernameInput, setUsernameInput] = useState('admin');
-  const [passwordInput, setPasswordInput] = useState('admin123');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [verifyingAuth, setVerifyingAuth] = useState(false);
@@ -54,7 +57,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     bank_id: '970415',
     bank_code: 'ICB',
     qr_template: 'compact2',
-    account_number: '109888888888',
+    account_number: '0866127232',
     account_name: 'CHỦ QUÁN FRIENDSHIP CAFÉ',
     is_active: true,
     custom_qr_image_url: '',
@@ -81,7 +84,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
   const handleLogout = (msg?: string | React.MouseEvent) => {
     localStorage.removeItem('friendship_admin_token');
+    sessionStorage.removeItem('friendship_admin_token');
     setToken(null);
+    setPasswordInput('');
     if (typeof msg === 'string') {
       setLoginError(msg);
     } else {
@@ -178,17 +183,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setLoginError(null);
 
     try {
-      const username = usernameInput.trim();
       const password = passwordInput.trim();
 
-      if (!username || !password) {
-        throw new Error('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu');
+      if (!password) {
+        throw new Error('Vui lòng nhập mật khẩu quản trị viên');
       }
 
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: usernameInput.trim() || 'admin', password }),
       });
 
       const contentType = res.headers.get('content-type') || '';
@@ -206,14 +210,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({
       }
 
       if (!res.ok || !data?.token) {
-        throw new Error(data?.error || 'Tên đăng nhập hoặc mật khẩu không chính xác');
+        throw new Error(data?.error || 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!');
       }
 
       localStorage.setItem('friendship_admin_token', data.token);
+      sessionStorage.setItem('friendship_admin_token', data.token);
       setToken(data.token);
+      setPasswordInput('');
       setLoginError(null);
     } catch (err: any) {
-      setLoginError(err.message || 'Đăng nhập không thành công');
+      setLoginError(err.message || 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!');
     } finally {
       setLoginLoading(false);
     }
@@ -539,35 +545,31 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-[#171717] uppercase block mb-1">
-                Tên đăng nhập:
+              <label className="text-xs font-bold text-[#171717] uppercase block mb-1.5">
+                Mật khẩu quản trị viên:
               </label>
-              <input
-                type="text"
-                value={usernameInput}
-                onChange={e => setUsernameInput(e.target.value)}
-                className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#171717] text-sm font-semibold"
-                placeholder="admin"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[#171717] uppercase block mb-1">
-                Mật khẩu:
-              </label>
-              <input
-                type="password"
-                value={passwordInput}
-                onChange={e => setPasswordInput(e.target.value)}
-                className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#171717] text-sm font-semibold"
-                placeholder="admin123"
-                required
-              />
-            </div>
-
-            <div className="p-2.5 bg-[#FFE14D]/40 rounded-xl border border-[#171717] text-[11px] text-gray-700 font-medium">
-              💡 Mặc định: <strong className="font-mono">admin</strong> / <strong className="font-mono">admin123</strong> (có thể đổi trong cài đặt)
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={e => {
+                    setPasswordInput(e.target.value);
+                    if (loginError) setLoginError(null);
+                  }}
+                  className="w-full pl-4 pr-12 py-3 bg-white rounded-xl border-3 border-[#171717] text-sm font-semibold tracking-wide focus:outline-none focus:ring-2 focus:ring-[#2678F3] shadow-inner placeholder:text-gray-400"
+                  placeholder="Nhập mật khẩu quản trị..."
+                  autoFocus
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#171717] p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4 text-[#F44336]" /> : <Eye className="w-4 h-4 text-[#2678F3]" />}
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -581,14 +583,21 @@ export const AdminPage: React.FC<AdminPageProps> = ({
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="flex-1 py-3 bg-[#F44336] hover:bg-red-600 disabled:bg-gray-400 text-white font-comic text-sm font-black rounded-xl border-2 border-[#171717] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+                className="flex-1 py-3 bg-[#F44336] hover:bg-red-600 disabled:bg-gray-400 text-white font-comic text-sm font-black rounded-xl border-2 border-[#171717] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                {loginLoading ? 'ĐANG ĐĂNG NHẬP...' : 'VÀO TRANG QUẢN TRỊ'}
+                {loginLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>ĐANG XÁC THỰC...</span>
+                  </>
+                ) : (
+                  <span>VÀO TRANG QUẢN TRỊ</span>
+                )}
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="py-3 px-4 bg-white text-[#171717] font-bold text-sm rounded-xl border-2 border-[#171717] shadow-pop-sm"
+                className="py-3 px-4 bg-white text-[#171717] font-bold text-sm rounded-xl border-2 border-[#171717] shadow-pop-sm hover:bg-gray-100 cursor-pointer"
               >
                 Thoát
               </button>

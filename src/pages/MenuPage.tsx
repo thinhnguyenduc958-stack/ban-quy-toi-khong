@@ -96,19 +96,21 @@ export const MenuPage: React.FC<MenuPageProps> = ({ products, categories }) => {
         <div className="text-center py-16 bg-white rounded-3xl border-4 border-[#171717] shadow-pop-lg max-w-lg mx-auto p-8 space-y-4">
           <div className="text-5xl">🔍</div>
           <h3 className="font-comic text-xl font-bold text-[#171717]">
-            Không tìm thấy món nào!
+            {products.length === 0 ? 'Đang chuẩn bị thực đơn...' : 'Không tìm thấy món nào!'}
           </h3>
           <p className="text-sm text-gray-600">
-            Thử tìm với từ khóa khác hoặc bấm nút bên dưới để xem tất cả thực đơn nhé.
+            {products.length === 0
+              ? 'Vui lòng chờ trong giây lát để hệ thống cập nhật danh sách món.'
+              : 'Thử tìm với từ khóa khác hoặc bấm nút bên dưới để xem toàn bộ 13 món ngon nhé.'}
           </p>
           <button
             onClick={() => {
               setSearchQuery('');
               setSelectedCategory('cat-all');
             }}
-            className="px-5 py-2.5 bg-[#FFE14D] font-comic text-xs font-black rounded-xl border-2 border-[#171717] shadow-pop"
+            className="px-5 py-2.5 bg-[#FFE14D] hover:bg-yellow-400 font-comic text-xs font-black rounded-xl border-2 border-[#171717] shadow-pop cursor-pointer"
           >
-            XEM TẤT CẢ MÓN
+            XEM TẤT CẢ 13 MÓN NGON
           </button>
         </div>
       ) : (
@@ -131,7 +133,9 @@ export const MenuPage: React.FC<MenuPageProps> = ({ products, categories }) => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        if (product.image_url.includes('street_snack')) {
+                        if (product.category_id === 'cat-combo' || product.image_url.includes('hero')) {
+                          e.currentTarget.src = '/images/hero_pop_art_cafe_1793702876689.jpg';
+                        } else if (product.category_id === 'cat-do-an-vat' || product.image_url.includes('street_snack')) {
                           e.currentTarget.src = '/images/product_street_snack_1793702876247.jpg';
                         } else {
                           e.currentTarget.src = '/images/product_bubble_tea_1793702875693.jpg';

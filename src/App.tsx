@@ -16,6 +16,7 @@ import { HallOfFamePage } from './pages/HallOfFamePage';
 import { OrderStatusLookupPage } from './pages/OrderStatusLookupPage';
 import { AdminPage } from './pages/AdminPage';
 import { Product, Category, Order, BankSettings } from './types';
+import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from './data/initialData';
 import { WifiOff } from 'lucide-react';
 
 export default function App() {
@@ -28,9 +29,9 @@ export default function App() {
 
 function MainApp() {
   const [currentTab, setCurrentTab] = useState<'home' | 'menu' | 'leaderboard' | 'lookup' | 'payment' | 'success' | 'admin'>('home');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
+  const [loading, setLoading] = useState(false);
 
   // Active payment state
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
@@ -54,17 +55,26 @@ function MainApp() {
   const fetchInitialData = async () => {
     try {
       const [prodRes, catRes] = await Promise.all([
-        fetch('/api/products'),
-        fetch('/api/categories'),
+        fetch('/api/products').catch(() => null),
+        fetch('/api/categories').catch(() => null),
       ]);
-      if (prodRes.ok && catRes.ok) {
-        const prodData = await prodRes.json();
-        const catData = await catRes.json();
-        setProducts(prodData);
-        setCategories(catData);
+
+      if (prodRes && prodRes.ok && catRes && catRes.ok) {
+        const prodType = prodRes.headers.get('content-type') || '';
+        const catType = catRes.headers.get('content-type') || '';
+        if (prodType.includes('application/json') && catType.includes('application/json')) {
+          const prodData = await prodRes.json();
+          const catData = await catRes.json();
+          if (Array.isArray(prodData) && prodData.length > 0) {
+            setProducts(prodData);
+          }
+          if (Array.isArray(catData) && catData.length > 0) {
+            setCategories(catData);
+          }
+        }
       }
     } catch (e) {
-      console.error('Error fetching initial data:', e);
+      console.warn('Initial data fetch fallback active:', e);
     } finally {
       setLoading(false);
     }

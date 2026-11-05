@@ -104,7 +104,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Trà đá',
     description: '5K thôi, nhưng tình cảm thì vô giá.',
     price: 5000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-nuoc-giai-khat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -114,7 +114,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Bim bim',
     description: 'Giòn tan như tình bạn của chúng ta.',
     price: 5000,
-    image_url: '/src/assets/images/product_street_snack_1793702876247.jpg',
+    image_url: '/images/product_street_snack_1793702876247.jpg',
     category_id: 'cat-do-an-vat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -124,7 +124,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Trà tắc',
     description: 'Một chút chua, một chút ngọt, giống cuộc đời tôi.',
     price: 20000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-tra-trai-cay',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -134,7 +134,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Coca-Cola',
     description: 'Ngọt ngào, có ga, bùng nổ năng lượng tình bạn.',
     price: 20000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-nuoc-giai-khat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -144,7 +144,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Cà phê sữa',
     description: 'Mời tôi tỉnh táo để tiếp tục làm bạn.',
     price: 20000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-ca-phe',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -154,7 +154,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Trà đào',
     description: 'Đào ngâm giòn ngọt, mát lạnh sảng khoái.',
     price: 25000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-tra-trai-cay',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -164,7 +164,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Trà sữa truyền thống',
     description: 'Thơm béo trân châu, ngọt lịm tim người mời.',
     price: 25000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-tra-sua',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -174,7 +174,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Bạc xỉu',
     description: 'Nhiều sữa ít cà phê, dịu ngọt ấm áp.',
     price: 25000,
-    image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+    image_url: '/images/product_bubble_tea_1793702875693.jpg',
     category_id: 'cat-ca-phe',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -184,7 +184,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Xúc xích chiên',
     description: 'Nóng hổi, chấm tương ớt cay nồng gắn kết.',
     price: 20000,
-    image_url: '/src/assets/images/product_street_snack_1793702876247.jpg',
+    image_url: '/images/product_street_snack_1793702876247.jpg',
     category_id: 'cat-do-an-vat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -194,7 +194,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Khoai tây chiên',
     description: 'Vàng ươm giòn rụm, ăn vào quên hết muộn phiền.',
     price: 25000,
-    image_url: '/src/assets/images/product_street_snack_1793702876247.jpg',
+    image_url: '/images/product_street_snack_1793702876247.jpg',
     category_id: 'cat-do-an-vat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -204,7 +204,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Cá viên chiên',
     description: 'Món quà vặt tuổi thơ, cắn một miếng nhớ bạn một đời.',
     price: 25000,
-    image_url: '/src/assets/images/product_street_snack_1793702876247.jpg',
+    image_url: '/images/product_street_snack_1793702876247.jpg',
     category_id: 'cat-do-an-vat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -214,7 +214,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Bánh tráng trộn',
     description: 'Đầy đủ khô bò, trứng cút, xoài chua — đậm đà tình thân.',
     price: 25000,
-    image_url: '/src/assets/images/product_street_snack_1793702876247.jpg',
+    image_url: '/images/product_street_snack_1793702876247.jpg',
     category_id: 'cat-do-an-vat',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -224,7 +224,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: 'Combo tình bạn',
     description: 'Một lần mời, tình bạn thêm bền chặt. Gồm 1 Trà sữa + 1 Bánh tráng trộn + 1 Bim bim!',
     price: 50000,
-    image_url: '/src/assets/images/hero_pop_art_cafe_1793702876689.jpg',
+    image_url: '/images/hero_pop_art_cafe_1793702876689.jpg',
     category_id: 'cat-combo',
     is_available: true,
     created_at: new Date('2026-01-01').toISOString(),
@@ -237,7 +237,7 @@ const DEFAULT_BANK_SETTINGS: BankSettings = {
   bank_id: '970415',
   bank_code: 'ICB',
   qr_template: 'compact2',
-  account_number: '109888888888',
+  account_number: '0866127232',
   account_name: 'CHỦ QUÁN FRIENDSHIP CAFÉ',
   is_active: true,
   custom_qr_image_url: '',
@@ -262,7 +262,7 @@ const SAMPLE_ORDERS: Order[] = [
         unit_price: 50000,
         quantity: 2,
         subtotal: 100000,
-        image_url: '/src/assets/images/hero_pop_art_cafe_1793702876689.jpg',
+        image_url: '/images/hero_pop_art_cafe_1793702876689.jpg',
       },
       {
         product_id: 'prod-tra-sua-truyen-thong',
@@ -270,7 +270,7 @@ const SAMPLE_ORDERS: Order[] = [
         unit_price: 25000,
         quantity: 2,
         subtotal: 50000,
-        image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+        image_url: '/images/product_bubble_tea_1793702875693.jpg',
       },
     ],
     created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
@@ -293,7 +293,7 @@ const SAMPLE_ORDERS: Order[] = [
         unit_price: 20000,
         quantity: 2,
         subtotal: 40000,
-        image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+        image_url: '/images/product_bubble_tea_1793702875693.jpg',
       },
       {
         product_id: 'prod-khoai-tay-chien',
@@ -301,7 +301,7 @@ const SAMPLE_ORDERS: Order[] = [
         unit_price: 25000,
         quantity: 1,
         subtotal: 25000,
-        image_url: '/src/assets/images/product_street_snack_1793702876247.jpg',
+        image_url: '/images/product_street_snack_1793702876247.jpg',
       },
       {
         product_id: 'prod-tra-da',
@@ -309,7 +309,7 @@ const SAMPLE_ORDERS: Order[] = [
         unit_price: 5000,
         quantity: 1,
         subtotal: 5000,
-        image_url: '/src/assets/images/product_bubble_tea_1793702875693.jpg',
+        image_url: '/images/product_bubble_tea_1793702875693.jpg',
       },
     ],
     created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
@@ -332,7 +332,7 @@ const SAMPLE_ORDERS: Order[] = [
         unit_price: 50000,
         quantity: 1,
         subtotal: 50000,
-        image_url: '/src/assets/images/hero_pop_art_cafe_1793702876689.jpg',
+        image_url: '/images/hero_pop_art_cafe_1793702876689.jpg',
       },
     ],
     created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
@@ -365,23 +365,32 @@ class Database {
             bank_id: '970415',
             bank_code: 'ICB',
             qr_template: 'compact2',
-            account_number: currentBank?.account_number || '109888888888',
+            account_number: currentBank?.account_number && currentBank.account_number !== '109888888888' ? currentBank.account_number : '0866127232',
             account_name: currentBank?.account_name || 'CHỦ QUÁN FRIENDSHIP CAFÉ',
             is_active: true,
             custom_qr_image_url: currentBank?.custom_qr_image_url || '',
             qr_mode: currentBank?.qr_mode || 'HYBRID',
           };
         } else {
+          if (currentBank.account_number === '109888888888') {
+            currentBank.account_number = '0866127232';
+          }
           currentBank.qr_mode = currentBank.qr_mode || 'HYBRID';
           currentBank.custom_qr_image_url = currentBank.custom_qr_image_url || '';
         }
+
+        const adminUser = parsed.admin || { username: 'admin', password: '050827' };
+        if (adminUser.password === 'admin123') {
+          adminUser.password = process.env.ADMIN_PASSWORD || '050827';
+        }
+
         return {
           products: parsed.products || DEFAULT_PRODUCTS,
           categories: parsed.categories || DEFAULT_CATEGORIES,
           bank_settings: currentBank,
           orders: parsed.orders || SAMPLE_ORDERS,
           audit_logs: parsed.audit_logs || [],
-          admin: parsed.admin || { username: 'admin', password: 'admin123' },
+          admin: adminUser,
           last_order_index: parsed.last_order_index || 90,
         };
       }
@@ -405,7 +414,7 @@ class Database {
           created_at: new Date().toISOString(),
         },
       ],
-      admin: { username: 'admin', password: 'admin123' },
+      admin: { username: 'admin', password: process.env.ADMIN_PASSWORD || '050827' },
       last_order_index: 90,
     };
     this.saveStore(initialStore);
@@ -688,7 +697,13 @@ class Database {
 
   // Admin Auth
   verifyAdmin(password: string): boolean {
-    return password === this.store.admin.password;
+    const clean = (password || '').trim();
+    if (!clean) return false;
+    const envPassword = process.env.ADMIN_PASSWORD;
+    if (envPassword && clean === envPassword.trim()) {
+      return true;
+    }
+    return clean === (this.store.admin.password || '050827').trim();
   }
 
   updateAdminPassword(newPassword: string, adminUsername: string): boolean {

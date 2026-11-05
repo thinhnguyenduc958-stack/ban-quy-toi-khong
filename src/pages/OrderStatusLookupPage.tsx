@@ -30,9 +30,16 @@ export const OrderStatusLookupPage: React.FC<OrderStatusLookupPageProps> = ({
 
     try {
       const res = await fetch(`/api/orders/${cleanCode}`);
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = null;
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        throw new Error('Không tìm thấy thông tin đơn hàng này');
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || 'Không tìm thấy đơn hàng này');
+        throw new Error(data?.error || 'Không tìm thấy đơn hàng này');
       }
       setFoundOrder(data.order);
       setBankData(data.bank);

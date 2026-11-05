@@ -214,22 +214,22 @@ app.post('/api/admin/login', (req, res) => {
   try {
     const rawUsername = req.body?.username;
     const rawPassword = req.body?.password;
-    const username = typeof rawUsername === 'string' ? rawUsername.trim() : '';
+    const username = typeof rawUsername === 'string' && rawUsername.trim() ? rawUsername.trim() : 'admin';
     const password = typeof rawPassword === 'string' ? rawPassword.trim() : '';
 
-    if (!username || !password) {
-      res.status(400).json({ success: false, error: 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu' });
+    if (!password) {
+      res.status(400).json({ success: false, error: 'Vui lòng nhập mật khẩu quản trị viên' });
       return;
     }
 
-    if (username === 'admin' && db.verifyAdmin(password)) {
+    if (db.verifyAdmin(password)) {
       res.json({
         success: true,
         token: ADMIN_TOKEN_SECRET,
-        user: { username: 'admin', role: 'admin' },
+        user: { username, role: 'admin' },
       });
     } else {
-      res.status(401).json({ success: false, error: 'Tên đăng nhập hoặc mật khẩu quản trị không đúng' });
+      res.status(401).json({ success: false, error: 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!' });
     }
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message || 'Lỗi xử lý đăng nhập' });
@@ -553,4 +553,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.VERCEL !== '1' && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  startServer();
+}
+
+export default app;

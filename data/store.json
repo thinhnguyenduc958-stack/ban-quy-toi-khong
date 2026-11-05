@@ -181,13 +181,57 @@
     "bank_id": "970415",
     "bank_code": "ICB",
     "qr_template": "compact2",
-    "account_number": "109888888888",
+    "account_number": "0866127232",
     "account_name": "CHỦ QUÁN FRIENDSHIP CAFÉ",
     "is_active": true,
     "custom_qr_image_url": "",
     "qr_mode": "HYBRID"
   },
   "orders": [
+    {
+      "id": "ord-1793884322009",
+      "order_code": "DH0095",
+      "buyer_name": "Kiem Thu Vien",
+      "is_anonymous": false,
+      "friend_note": "Test VietinBank QR 0866127232",
+      "total_amount": 50000,
+      "payment_content": "QUYBAN DH0095",
+      "payment_status": "PAID",
+      "items": [
+        {
+          "product_id": "prod-combo-tinh-ban",
+          "product_name": "Combo tình bạn",
+          "unit_price": 50000,
+          "quantity": 1,
+          "subtotal": 50000,
+          "image_url": "/src/assets/images/hero_pop_art_cafe_1793702876689.jpg"
+        }
+      ],
+      "created_at": "2026-11-05T13:12:02.009Z",
+      "paid_at": "2026-11-05T13:12:09.392Z",
+      "audit_note": "Xac nhan tren VietinBank iPay STK 0866127232"
+    },
+    {
+      "id": "ord-1793884307415",
+      "order_code": "DH0094",
+      "buyer_name": "Kiem Thu Vien",
+      "is_anonymous": false,
+      "friend_note": "Test VietinBank QR",
+      "total_amount": 50000,
+      "payment_content": "QUYBAN DH0094",
+      "payment_status": "PENDING",
+      "items": [
+        {
+          "product_id": "prod-combo-tinh-ban",
+          "product_name": "Combo tình bạn",
+          "unit_price": 50000,
+          "quantity": 1,
+          "subtotal": 50000,
+          "image_url": "/src/assets/images/hero_pop_art_cafe_1793702876689.jpg"
+        }
+      ],
+      "created_at": "2026-11-05T13:11:47.415Z"
+    },
     {
       "id": "ord-1793705405101",
       "order_code": "DH0093",
@@ -359,6 +403,15 @@
   ],
   "audit_logs": [
     {
+      "id": "log-1793884329392-scgc",
+      "order_id": "ord-1793884322009",
+      "order_code": "DH0095",
+      "admin_username": "admin",
+      "action": "CONFIRM_PAID",
+      "note": "Xac nhan tren VietinBank iPay STK 0866127232",
+      "created_at": "2026-11-05T13:12:09.392Z"
+    },
+    {
       "id": "log-1793705413028-jqkn",
       "order_id": "ord-1793705405101",
       "order_code": "DH0093",
@@ -424,7 +477,7 @@
   ],
   "admin": {
     "username": "admin",
-    "password": "admin123"
+    "password": "050827"
   },
-  "last_order_index": 93
+  "last_order_index": 95
 }
