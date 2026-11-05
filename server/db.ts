@@ -1,5 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface Product {
   id: string;
@@ -349,53 +353,58 @@ class Database {
   }
 
   private loadStore(): DataStore {
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
+    const candidatePaths = [
+      path.join('/tmp', 'store.json'),
+      path.resolve(process.cwd(), 'data/store.json'),
+      path.resolve(process.cwd(), 'data', 'store.json'),
+      path.join(__dirname, '../data/store.json'),
+    ];
 
-      if (fs.existsSync(DATA_FILE)) {
-        const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        let currentBank = parsed.bank_settings;
-        if (!currentBank || currentBank.bank_code === 'MB' || !currentBank.bank_id) {
-          currentBank = {
-            id: 'bank-default',
-            bank_name: 'VietinBank (Ngân hàng TMCP Công Thương Việt Nam)',
-            bank_id: '970415',
-            bank_code: 'ICB',
-            qr_template: 'compact2',
-            account_number: currentBank?.account_number && currentBank.account_number !== '109888888888' ? currentBank.account_number : '0866127232',
-            account_name: currentBank?.account_name || 'CHỦ QUÁN FRIENDSHIP CAFÉ',
-            is_active: true,
-            custom_qr_image_url: currentBank?.custom_qr_image_url || '',
-            qr_mode: currentBank?.qr_mode || 'HYBRID',
-          };
-        } else {
-          if (currentBank.account_number === '109888888888') {
-            currentBank.account_number = '0866127232';
+    for (const filePath of candidatePaths) {
+      try {
+        if (fs.existsSync(filePath)) {
+          const raw = fs.readFileSync(filePath, 'utf-8');
+          const parsed = JSON.parse(raw);
+          let currentBank = parsed.bank_settings;
+          if (!currentBank || currentBank.bank_code === 'MB' || !currentBank.bank_id) {
+            currentBank = {
+              id: 'bank-default',
+              bank_name: 'VietinBank (Ngân hàng TMCP Công Thương Việt Nam)',
+              bank_id: '970415',
+              bank_code: 'ICB',
+              qr_template: 'compact2',
+              account_number: currentBank?.account_number && currentBank.account_number !== '109888888888' ? currentBank.account_number : '0866127232',
+              account_name: currentBank?.account_name || 'CHỦ QUÁN FRIENDSHIP CAFÉ',
+              is_active: true,
+              custom_qr_image_url: currentBank?.custom_qr_image_url || '',
+              qr_mode: currentBank?.qr_mode || 'HYBRID',
+            };
+          } else {
+            if (currentBank.account_number === '109888888888') {
+              currentBank.account_number = '0866127232';
+            }
+            currentBank.qr_mode = currentBank.qr_mode || 'HYBRID';
+            currentBank.custom_qr_image_url = currentBank.custom_qr_image_url || '';
           }
-          currentBank.qr_mode = currentBank.qr_mode || 'HYBRID';
-          currentBank.custom_qr_image_url = currentBank.custom_qr_image_url || '';
-        }
 
-        const adminUser = parsed.admin || { username: 'admin', password: '050827' };
-        if (adminUser.password === 'admin123') {
-          adminUser.password = process.env.ADMIN_PASSWORD || '050827';
-        }
+          const adminUser = parsed.admin || { username: 'admin', password: '050827' };
+          if (adminUser.password === 'admin123') {
+            adminUser.password = process.env.ADMIN_PASSWORD || '050827';
+          }
 
-        return {
-          products: parsed.products || DEFAULT_PRODUCTS,
-          categories: parsed.categories || DEFAULT_CATEGORIES,
-          bank_settings: currentBank,
-          orders: parsed.orders || SAMPLE_ORDERS,
-          audit_logs: parsed.audit_logs || [],
-          admin: adminUser,
-          last_order_index: parsed.last_order_index || 90,
-        };
+          return {
+            products: parsed.products || DEFAULT_PRODUCTS,
+            categories: parsed.categories || DEFAULT_CATEGORIES,
+            bank_settings: currentBank,
+            orders: parsed.orders || SAMPLE_ORDERS,
+            audit_logs: parsed.audit_logs || [],
+            admin: adminUser,
+            last_order_index: parsed.last_order_index || 90,
+          };
+        }
+      } catch (readErr) {
+        // Continue to next candidate path
       }
-    } catch (e) {
-      console.error('Error reading data store, initializing fresh defaults:', e);
     }
 
     const initialStore: DataStore = {
@@ -417,16 +426,28 @@ class Database {
       admin: { username: 'admin', password: process.env.ADMIN_PASSWORD || '050827' },
       last_order_index: 90,
     };
+
     this.saveStore(initialStore);
     return initialStore;
   }
 
   private saveStore(storeToSave?: DataStore) {
+    const data = storeToSave || this.store;
+    // 1. Try local data/store.json if writable
     try {
-      const data = storeToSave || this.store;
-      fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
-    } catch (e) {
-      console.error('Failed to write store file:', e);
+      const dataDir = path.resolve(process.cwd(), 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(dataDir, 'store.json'), JSON.stringify(data, null, 2), 'utf-8');
+      return;
+    } catch (_) {
+      // 2. Fallback to /tmp on Vercel / serverless environments
+      try {
+        fs.writeFileSync(path.join('/tmp', 'store.json'), JSON.stringify(data, null, 2), 'utf-8');
+      } catch (tmpErr) {
+        // Retain in memory safely without throwing
+      }
     }
   }
 
