@@ -15,6 +15,7 @@ import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import { HallOfFamePage } from './pages/HallOfFamePage';
 import { OrderStatusLookupPage } from './pages/OrderStatusLookupPage';
 import { AdminPage } from './pages/AdminPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
 import { Product, Category, Order, BankSettings } from './types';
 import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from './data/initialData';
 import { WifiOff } from 'lucide-react';
@@ -28,7 +29,33 @@ export default function App() {
 }
 
 function MainApp() {
-  const [currentTab, setCurrentTab] = useState<'home' | 'menu' | 'leaderboard' | 'lookup' | 'payment' | 'success' | 'admin'>('home');
+  // URL routing state
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname || '/';
+    }
+    return '/';
+  });
+
+  const navigate = (path: string) => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname || '/');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  const [currentTab, setCurrentTab] = useState<'home' | 'menu' | 'leaderboard' | 'lookup' | 'payment' | 'success'>('home');
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [loading, setLoading] = useState(false);
@@ -100,6 +127,48 @@ function MainApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // =========================================================================
+  // ROUTE 1: INDEPENDENT ADMIN LOGIN PAGE (/admin/login)
+  // No customer Header, no Footer, no CartDrawer. Scoped Retro Pop Art styles.
+  // =========================================================================
+  if (currentPath === '/admin/login') {
+    return (
+      <AdminLoginPage
+        onLoginSuccess={() => {
+          navigate('/admin');
+        }}
+        onNavigateHome={() => {
+          navigate('/');
+        }}
+      />
+    );
+  }
+
+  // =========================================================================
+  // ROUTE 2: INDEPENDENT ADMIN DASHBOARD PAGE (/admin)
+  // Dedicated management environment. If unauthenticated, redirects to /admin/login.
+  // =========================================================================
+  if (currentPath === '/admin') {
+    return (
+      <div className="min-h-screen bg-[#FFF4DF] text-[#171717] bg-halftone-cream selection:bg-[#FFE14D]">
+        <AdminPage
+          onClose={() => {
+            navigate('/');
+          }}
+          onRequireLogin={() => {
+            navigate('/admin/login');
+          }}
+          categories={categories}
+          onRefreshProducts={fetchInitialData}
+        />
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // ROUTE 3: CUSTOMER STOREFRONT (/, /menu, /leaderboard, etc.)
+  // Full storefront layout with Header, Cart, Content, and Footer.
+  // =========================================================================
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FFF4DF] text-[#171717] bg-halftone-cream selection:bg-[#FFE14D]">
       {/* Offline Banner */}
@@ -211,27 +280,14 @@ function MainApp() {
                 }}
               />
             )}
-
-            {/* Tab: Admin Dashboard */}
-            {currentTab === 'admin' && (
-              <AdminPage
-                onClose={() => {
-                  setCurrentTab('home');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                categories={categories}
-                onRefreshProducts={fetchInitialData}
-              />
-            )}
           </>
         )}
       </main>
 
-      {/* Footer */}
+      {/* Footer with link to Admin */}
       <Footer
         onOpenAdmin={() => {
-          setCurrentTab('admin');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          navigate('/admin');
         }}
       />
     </div>

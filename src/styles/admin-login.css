@@ -1,0 +1,258 @@
+/* ==========================================================================
+   ADMIN LOGIN - NAMESPACED INDEPENDENT RETRO POP ART STYLESHEET
+   Scope: .admin-login-scope
+   Zero bleeding to global website / customer storefront.
+   ========================================================================== */
+
+.admin-login-scope {
+  --admin-olive: #5d6652;
+  --admin-olive-dark: #3f4637;
+  --admin-cream: #fffdf2;
+  --admin-yellow: #ffe14d;
+  --admin-red: #f44336;
+  --admin-red-hover: #d32f2f;
+  --admin-blue: #2678f3;
+  --admin-ink: #171717;
+  --admin-border-thick: 4px solid var(--admin-ink);
+  --admin-border-medium: 3px solid var(--admin-ink);
+  --admin-shadow-pop: 5px 5px 0px var(--admin-ink);
+  --admin-shadow-pop-lg: 8px 8px 0px var(--admin-ink);
+
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--admin-olive);
+  background-image: 
+    radial-gradient(var(--admin-olive-dark) 18%, transparent 19%),
+    radial-gradient(var(--admin-olive-dark) 18%, transparent 19%);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: var(--admin-ink);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.admin-login-scope * {
+  box-sizing: border-box;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--admin-cream);
+  border: var(--admin-border-thick);
+  border-radius: 28px;
+  box-shadow: var(--admin-shadow-pop-lg);
+  padding: 2.25rem 2rem;
+  position: relative;
+  z-index: 10;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (max-width: 480px) {
+  .admin-login-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: 20px;
+    box-shadow: 6px 6px 0px var(--admin-ink);
+  }
+}
+
+.admin-lock-badge {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.25rem auto;
+  border-radius: 18px;
+  background-color: var(--admin-yellow);
+  border: var(--admin-border-medium);
+  box-shadow: var(--admin-shadow-pop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-ink);
+}
+
+.admin-login-title {
+  font-family: 'Bungee', cursive, sans-serif;
+  font-size: 1.65rem;
+  line-height: 1.2;
+  font-weight: 900;
+  color: var(--admin-ink);
+  text-align: center;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 480px) {
+  .admin-login-title {
+    font-size: 1.4rem;
+  }
+}
+
+.admin-login-desc {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #4b5563;
+  text-align: center;
+  margin: 0 0 1.75rem 0;
+  font-weight: 600;
+}
+
+.admin-input-group {
+  margin-bottom: 1.25rem;
+}
+
+.admin-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-ink);
+  margin-bottom: 0.5rem;
+}
+
+.admin-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-password-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 3.25rem 0 1.15rem;
+  background-color: #ffffff;
+  border: var(--admin-border-medium);
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--admin-ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-password-input:focus {
+  border-color: var(--admin-blue);
+  box-shadow: 0 0 0 3px rgba(38, 120, 243, 0.25);
+}
+
+.admin-toggle-pwd-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #6b7280;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.admin-toggle-pwd-btn:hover {
+  color: var(--admin-ink);
+  background-color: #f3f4f6;
+}
+
+.admin-submit-btn {
+  width: 100%;
+  height: 52px;
+  background-color: var(--admin-red);
+  color: #ffffff;
+  border: var(--admin-border-medium);
+  border-radius: 14px;
+  box-shadow: var(--admin-shadow-pop);
+  font-family: 'Bungee', cursive, sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+  user-select: none;
+}
+
+.admin-submit-btn:hover:not(:disabled) {
+  background-color: var(--admin-red-hover);
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0px var(--admin-ink);
+}
+
+.admin-submit-btn:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px var(--admin-ink);
+}
+
+.admin-submit-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.85;
+  transform: none;
+  box-shadow: 3px 3px 0px var(--admin-ink);
+}
+
+.admin-back-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  height: 44px;
+  background-color: #ffffff;
+  color: var(--admin-ink);
+  border: 2px solid var(--admin-ink);
+  border-radius: 12px;
+  box-shadow: 2px 2px 0px var(--admin-ink);
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+
+.admin-back-btn:hover {
+  background-color: #f9fafb;
+  transform: translate(1px, 1px);
+}
+
+.admin-error-box {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  background-color: #fef2f2;
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  line-height: 1.4;
+}
+
+.admin-error-box svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.admin-brand-tag {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}

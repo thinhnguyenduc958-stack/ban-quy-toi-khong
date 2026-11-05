@@ -11,18 +11,20 @@ import { playDing } from '../utils/audio';
 
 interface AdminPageProps {
   onClose: () => void;
+  onRequireLogin?: () => void;
   categories: Category[];
   onRefreshProducts: () => void;
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({
   onClose,
+  onRequireLogin,
   categories,
   onRefreshProducts,
 }) => {
-  // Auth state - persists securely via session/local storage
+  // Auth state - persists securely via HttpOnly session and sessionStorage
   const [token, setToken] = useState<string | null>(
-    () => localStorage.getItem('friendship_admin_token') || sessionStorage.getItem('friendship_admin_token')
+    () => sessionStorage.getItem('friendship_admin_session_token') || localStorage.getItem('friendship_admin_token') || sessionStorage.getItem('friendship_admin_token')
   );
   const [usernameInput, setUsernameInput] = useState('admin');
   const [passwordInput, setPasswordInput] = useState('');
@@ -82,26 +84,32 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   const [supabaseSql, setSupabaseSql] = useState('');
   const [copiedSql, setCopiedSql] = useState(false);
 
-  const handleLogout = (msg?: string | React.MouseEvent) => {
-    localStorage.removeItem('friendship_admin_token');
+  const handleLogout = async (msg?: string | React.MouseEvent) => {
+    try {
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (_) {}
+    sessionStorage.removeItem('friendship_admin_session_token');
     sessionStorage.removeItem('friendship_admin_token');
+    localStorage.removeItem('friendship_admin_token');
     setToken(null);
     setPasswordInput('');
-    if (typeof msg === 'string') {
-      setLoginError(msg);
-    } else {
-      setLoginError(null);
+    if (onRequireLogin) {
+      onRequireLogin();
     }
   };
 
-  // Safe fetch helper that guarantees JSON parsing and eliminates <!DOCTYPE HTML syntax errors
+  // Safe fetch helper that guarantees JSON parsing and passes HttpOnly session cookies
   const safeAdminFetch = async (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
-    if (token && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${token}`);
+    const activeToken = token || sessionStorage.getItem('friendship_admin_session_token');
+    if (activeToken && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${activeToken}`);
     }
 
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, { ...options, headers, credentials: 'include' });
     const contentType = res.headers.get('content-type') || '';
     let data: any = null;
 
@@ -132,50 +140,65 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     return data;
   };
 
-  // Verify token on mount / refresh and load data if valid
+  // Verify session on mount / refresh and load data if valid
   useEffect(() => {
-    if (token) {
-      let isMounted = true;
-      setVerifyingAuth(true);
+    let isMounted = true;
+    setVerifyingAuth(true);
 
-      fetch('/api/admin/verify', {
-        headers: { Authorization: `Bearer ${token}` },
+    const headers: Record<string, string> = {};
+    const activeToken = token || sessionStorage.getItem('friendship_admin_session_token');
+    if (activeToken) {
+      headers['Authorization'] = `Bearer ${activeToken}`;
+    }
+
+    fetch('/api/admin/session', {
+      method: 'GET',
+      credentials: 'include',
+      headers,
+    })
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json') && res.ok) {
+          const data = await res.json();
+          if (data.authenticated && isMounted) {
+            setToken(activeToken || 'authenticated');
+            fetchDashboardStats();
+            fetchOrders();
+            fetchAdminProducts();
+            fetchBankSettings();
+            fetchAuditLogs();
+            fetchSupabaseSql();
+            return;
+          }
+        }
+        if (isMounted) {
+          if (onRequireLogin) {
+            onRequireLogin();
+          } else {
+            handleLogout('Phiên đăng nhập đã hết hạn.');
+          }
+        }
       })
-        .then(async (res) => {
-          const contentType = res.headers.get('content-type') || '';
-          if (contentType.includes('application/json') && res.ok) {
-            const data = await res.json();
-            if (data.valid && isMounted) {
-              fetchDashboardStats();
-              fetchOrders();
-              fetchAdminProducts();
-              fetchBankSettings();
-              fetchAuditLogs();
-              fetchSupabaseSql();
-              return;
-            }
-          }
-          if (isMounted) {
-            handleLogout('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
-          }
-        })
-        .catch((err) => {
-          console.error('Lỗi kiểm tra token:', err);
-          if (isMounted) {
+      .catch((err) => {
+        console.error('Lỗi kiểm tra phiên quản trị:', err);
+        if (isMounted) {
+          if (onRequireLogin) {
+            onRequireLogin();
+          } else {
             handleLogout('Không thể xác thực phiên đăng nhập.');
           }
-        })
-        .finally(() => {
-          if (isMounted) {
-            setVerifyingAuth(false);
-          }
-        });
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setVerifyingAuth(false);
+        }
+      });
 
-      return () => {
-        isMounted = false;
-      };
-    }
-  }, [token]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -525,84 +548,43 @@ export const AdminPage: React.FC<AdminPageProps> = ({
   }
 
   // ==========================================
-  // RENDER: LOGIN MODAL IF NOT LOGGED IN
+  // RENDER: REDIRECT / UNAUTHORIZED IF NOT LOGGED IN
   // ==========================================
   if (!token) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-        <div className="w-full max-w-md bg-[#FFF4DF] rounded-3xl border-4 border-[#171717] shadow-pop-xl p-6 sm:p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FFE14D] border-3 border-[#171717] shadow-pop-sm flex items-center justify-center text-3xl">
-              🔐
-            </div>
+        <div className="w-full max-w-md bg-[#FFFDF0] rounded-3xl border-4 border-[#171717] shadow-pop-xl p-6 sm:p-8 space-y-6 text-center">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FFE14D] border-3 border-[#171717] shadow-pop-sm flex items-center justify-center text-3xl">
+            🔒
+          </div>
+          <div className="space-y-1">
             <h2 className="font-comic text-2xl font-black text-[#171717]">
-              ĐĂNG NHẬP QUẢN TRỊ
+              YÊU CẦU ĐĂNG NHẬP
             </h2>
             <p className="text-xs text-gray-700 font-medium">
-              Khu vực dành riêng cho chủ quán kiểm tra giao dịch VietQR
+              Bạn cần đăng nhập bằng tài khoản quản trị để truy cập bảng điều khiển.
             </p>
           </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-[#171717] uppercase block mb-1.5">
-                Mật khẩu quản trị viên:
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={passwordInput}
-                  onChange={e => {
-                    setPasswordInput(e.target.value);
-                    if (loginError) setLoginError(null);
-                  }}
-                  className="w-full pl-4 pr-12 py-3 bg-white rounded-xl border-3 border-[#171717] text-sm font-semibold tracking-wide focus:outline-none focus:ring-2 focus:ring-[#2678F3] shadow-inner placeholder:text-gray-400"
-                  placeholder="Nhập mật khẩu quản trị..."
-                  autoFocus
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#171717] p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4 text-[#F44336]" /> : <Eye className="w-4 h-4 text-[#2678F3]" />}
-                </button>
-              </div>
-            </div>
-
-            {loginError && (
-              <div className="p-3 bg-red-100 border-2 border-red-500 rounded-xl text-xs font-bold text-red-600 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{loginError}</span>
-              </div>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="flex-1 py-3 bg-[#F44336] hover:bg-red-600 disabled:bg-gray-400 text-white font-comic text-sm font-black rounded-xl border-2 border-[#171717] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loginLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>ĐANG XÁC THỰC...</span>
-                  </>
-                ) : (
-                  <span>VÀO TRANG QUẢN TRỊ</span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="py-3 px-4 bg-white text-[#171717] font-bold text-sm rounded-xl border-2 border-[#171717] shadow-pop-sm hover:bg-gray-100 cursor-pointer"
-              >
-                Thoát
-              </button>
-            </div>
-          </form>
+          <div className="flex flex-col gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (onRequireLogin) onRequireLogin();
+                else window.location.href = '/admin/login';
+              }}
+              className="w-full py-3 bg-[#F44336] hover:bg-red-600 text-white font-comic text-sm font-black rounded-xl border-3 border-[#171717] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>ĐẾN TRANG ĐĂNG NHẬP</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 px-4 bg-white text-[#171717] font-bold text-xs rounded-xl border-2 border-[#171717] shadow-pop-sm hover:bg-gray-100 cursor-pointer"
+            >
+              Về Trang Chủ Cửa Hàng
+            </button>
+          </div>
         </div>
       </div>
     );

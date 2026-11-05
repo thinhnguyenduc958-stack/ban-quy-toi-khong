@@ -24,20 +24,127 @@ app.use((req, res, next) => {
   next();
 });
 
-// Admin token constant
-export const ADMIN_TOKEN_SECRET = 'friendship-cafe-retro-pop-secret-token-2026';
+import crypto from 'crypto';
+
+// Session configuration
+const SESSION_SECRET = process.env.SESSION_SECRET || 'friendship-cafe-session-secret-2026-retro-pop-hq';
+const SESSION_MAX_AGE_SEC = 7 * 24 * 60 * 60; // 7 days
+const revokedSessionIds = new Set<string>();
+
+export interface AdminSessionData {
+  sid: string;
+  u: string;
+  r: string;
+  exp: number;
+  iat: number;
+}
+
+export function parseCookies(header?: string): Record<string, string> {
+  if (!header) return {};
+  const cookies: Record<string, string> = {};
+  const pairs = header.split(';');
+  for (const pair of pairs) {
+    const idx = pair.indexOf('=');
+    if (idx > -1) {
+      const k = pair.substring(0, idx).trim();
+      const v = pair.substring(idx + 1).trim();
+      cookies[k] = decodeURIComponent(v);
+    }
+  }
+  return cookies;
+}
+
+export function createSignedSession(username: string): { token: string; exp: number } {
+  const iat = Date.now();
+  const exp = iat + SESSION_MAX_AGE_SEC * 1000;
+  const sid = `sid_${crypto.randomBytes(16).toString('hex')}`;
+  const payload: AdminSessionData = {
+    sid,
+    u: username || 'admin',
+    r: 'admin',
+    exp,
+    iat,
+  };
+  const b64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(b64Payload).digest('base64url');
+  const token = `${b64Payload}.${signature}`;
+  return { token, exp };
+}
+
+export function verifySignedSession(token: string): AdminSessionData | null {
+  if (!token || typeof token !== 'string') return null;
+  // Backward compatibility with legacy token
+  if (token === 'friendship-cafe-retro-pop-secret-token-2026') {
+    return {
+      sid: 'legacy-token',
+      u: 'admin',
+      r: 'admin',
+      exp: Date.now() + 86400000,
+      iat: Date.now(),
+    };
+  }
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [b64Payload, signature] = parts;
+  try {
+    const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(b64Payload).digest('base64url');
+    const sigBuf = Buffer.from(signature);
+    const expectedBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      return null;
+    }
+    const jsonStr = Buffer.from(b64Payload, 'base64url').toString('utf8');
+    const session: AdminSessionData = JSON.parse(jsonStr);
+    if (!session || typeof session.exp !== 'number' || session.exp < Date.now()) {
+      return null;
+    }
+    if (session.sid && revokedSessionIds.has(session.sid)) {
+      return null;
+    }
+    return session;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function revokeSession(token: string): void {
+  const session = verifySignedSession(token);
+  if (session && session.sid) {
+    revokedSessionIds.add(session.sid);
+  }
+}
+
+export function extractAdminToken(req: express.Request): string | null {
+  // 1. HttpOnly cookie
+  const cookies = parseCookies(req.headers.cookie);
+  if (cookies.admin_session) {
+    return cookies.admin_session;
+  }
+  // 2. Authorization Bearer header
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7).trim();
+  }
+  // 3. Custom header
+  const customHeader = req.headers['x-admin-session'] || req.headers['x-admin-token'];
+  if (typeof customHeader === 'string' && customHeader.trim()) {
+    return customHeader.trim();
+  }
+  return null;
+}
 
 export function adminAuthMiddleware(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ success: false, error: 'Chưa đăng nhập quyền quản trị' });
+  const token = extractAdminToken(req);
+  if (!token) {
+    res.status(401).json({ success: false, error: 'Chưa đăng nhập quyền quản trị viên' });
     return;
   }
-  const token = authHeader.substring(7);
-  if (token !== ADMIN_TOKEN_SECRET) {
-    res.status(403).json({ success: false, error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' });
+  const session = verifySignedSession(token);
+  if (!session) {
+    res.status(401).json({ success: false, error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' });
     return;
   }
+  (req as any).adminSession = session;
   next();
 }
 
@@ -185,7 +292,7 @@ apiRouter.get('/leaderboard', (_req, res) => {
 });
 
 // ==========================================
-// 3. ADMIN AUTHENTICATION
+// 3. ADMIN AUTHENTICATION & SESSION
 // ==========================================
 apiRouter.post('/admin/login', (req, res) => {
   try {
@@ -200,10 +307,23 @@ apiRouter.post('/admin/login', (req, res) => {
     }
 
     if (db.verifyAdmin(password)) {
-      res.json({
+      const { token, exp } = createSignedSession(username);
+      const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+      const cookieHeader = [
+        `admin_session=${token}`,
+        `Path=/`,
+        `Max-Age=${SESSION_MAX_AGE_SEC}`,
+        `HttpOnly`,
+        `SameSite=Lax`,
+        ...(isProd ? ['Secure'] : [])
+      ].join('; ');
+
+      res.setHeader('Set-Cookie', cookieHeader);
+      res.status(200).json({
         success: true,
-        token: ADMIN_TOKEN_SECRET,
+        token,
         user: { username, role: 'admin' },
+        expiresAt: exp,
       });
     } else {
       res.status(401).json({ success: false, error: 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!' });
@@ -214,8 +334,41 @@ apiRouter.post('/admin/login', (req, res) => {
   }
 });
 
-apiRouter.get('/admin/verify', adminAuthMiddleware, (_req, res) => {
-  res.json({ valid: true, user: { username: 'admin', role: 'admin' } });
+apiRouter.get(['/admin/session', '/admin/verify'], (req, res) => {
+  try {
+    const token = extractAdminToken(req);
+    if (!token) {
+      res.status(401).json({ authenticated: false, error: 'Chưa đăng nhập' });
+      return;
+    }
+    const session = verifySignedSession(token);
+    if (!session) {
+      res.status(401).json({ authenticated: false, error: 'Phiên đăng nhập đã hết hạn hoặc không hợp lệ' });
+      return;
+    }
+    res.status(200).json({
+      authenticated: true,
+      user: { username: session.u, role: session.r },
+      expiresAt: session.exp,
+    });
+  } catch (e: any) {
+    res.status(500).json({ authenticated: false, error: e?.message || 'Lỗi kiểm tra phiên' });
+  }
+});
+
+apiRouter.post('/admin/logout', (req, res) => {
+  try {
+    const token = extractAdminToken(req);
+    if (token) {
+      revokeSession(token);
+    }
+    const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+    const clearCookie = `admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; SameSite=Lax${isProd ? '; Secure' : ''}`;
+    res.setHeader('Set-Cookie', clearCookie);
+    res.status(200).json({ success: true, message: 'Đăng xuất thành công' });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e?.message || 'Lỗi đăng xuất' });
+  }
 });
 
 apiRouter.get('/admin/stats', adminAuthMiddleware, (_req, res) => {
