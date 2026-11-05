@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { getErrorMessage } from '../utils/error';
 import '../styles/admin-login.css';
 
 interface AdminLoginPageProps {
@@ -98,7 +99,8 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
       }
 
       if (!res.ok || !data?.success) {
-        throw new Error(data?.error || 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!');
+        const safeMsg = getErrorMessage(data, 'Mật khẩu không chính xác');
+        throw new Error(safeMsg);
       }
 
       // Store token as secondary header fallback (HttpOnly cookie is set by server)
@@ -108,8 +110,9 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
 
       setPassword('');
       onLoginSuccess(data.token);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!');
+    } catch (err: unknown) {
+      const safeError = getErrorMessage(err, 'Mật khẩu không chính xác');
+      setErrorMessage(safeError);
     } finally {
       setIsLoading(false);
     }

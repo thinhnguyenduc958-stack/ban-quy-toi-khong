@@ -8,6 +8,7 @@ import {
 import { Order, BankSettings, Product, Category, AuditLog, DashboardStats, PaymentQrMode } from '../types';
 import { formatVND, VIETNAM_BANKS } from '../utils/format';
 import { playDing } from '../utils/audio';
+import { getErrorMessage } from '../utils/error';
 
 interface AdminPageProps {
   onClose: () => void;
@@ -129,12 +130,14 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     }
 
     if (res.status === 401 || res.status === 403) {
-      handleLogout(data?.error || 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
-      throw new Error(data?.error || 'Phiên đăng nhập không hợp lệ');
+      const errMsg = getErrorMessage(data, 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.');
+      handleLogout(errMsg);
+      throw new Error(errMsg);
     }
 
     if (!res.ok) {
-      throw new Error(data?.error || `Lỗi máy chủ (${res.status})`);
+      const errMsg = getErrorMessage(data, `Lỗi máy chủ (${res.status})`);
+      throw new Error(errMsg);
     }
 
     return data;

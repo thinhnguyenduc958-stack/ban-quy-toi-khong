@@ -2,7 +2,10 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import dotenv from 'dotenv';
 import { db } from './db';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,7 +30,8 @@ app.use((req, res, next) => {
 import crypto from 'crypto';
 
 // Session configuration
-const SESSION_SECRET = process.env.SESSION_SECRET || 'friendship-cafe-session-secret-2026-retro-pop-hq';
+const rawSessionSecret = process.env.SESSION_SECRET;
+const SESSION_SECRET = (rawSessionSecret ? rawSessionSecret.trim().replace(/^["']|["']$/g, '') : '') || 'friendship-cafe-session-secret-2026-retro-pop-hq';
 const SESSION_MAX_AGE_SEC = 7 * 24 * 60 * 60; // 7 days
 const revokedSessionIds = new Set<string>();
 
@@ -302,7 +306,11 @@ apiRouter.post('/admin/login', (req, res) => {
     const password = typeof rawPassword === 'string' ? rawPassword.trim() : '';
 
     if (!password) {
-      res.status(400).json({ success: false, error: 'Vui lòng nhập mật khẩu quản trị viên' });
+      res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập mật khẩu quản trị viên',
+        error: 'Vui lòng nhập mật khẩu quản trị viên',
+      });
       return;
     }
 
@@ -321,16 +329,26 @@ apiRouter.post('/admin/login', (req, res) => {
       res.setHeader('Set-Cookie', cookieHeader);
       res.status(200).json({
         success: true,
+        message: 'Đăng nhập thành công',
         token,
         user: { username, role: 'admin' },
         expiresAt: exp,
       });
     } else {
-      res.status(401).json({ success: false, error: 'Mật khẩu quản trị viên không chính xác. Vui lòng thử lại!' });
+      res.status(401).json({
+        success: false,
+        message: 'Mật khẩu không chính xác',
+        error: 'Mật khẩu không chính xác',
+      });
     }
   } catch (err: any) {
     console.error('Login error:', err);
-    res.status(500).json({ success: false, error: err?.message || 'Lỗi xử lý đăng nhập' });
+    res.status(500).json({
+      success: false,
+      message: 'Máy chủ đang gặp sự cố. Vui lòng thử lại.',
+      error: 'Máy chủ đang gặp sự cố. Vui lòng thử lại.',
+      details: err?.message || 'Lỗi xử lý serverless function',
+    });
   }
 });
 

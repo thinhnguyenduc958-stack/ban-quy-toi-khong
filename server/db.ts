@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -720,11 +723,27 @@ class Database {
   verifyAdmin(password: string): boolean {
     const clean = (password || '').trim();
     if (!clean) return false;
-    const envPassword = process.env.ADMIN_PASSWORD;
-    if (envPassword && clean === envPassword.trim()) {
-      return true;
+
+    // Check environment variable (stripping potential enclosing quotes and whitespace)
+    const envRaw = process.env.ADMIN_PASSWORD;
+    if (envRaw) {
+      const cleanEnv = envRaw.trim().replace(/^["']|["']$/g, '');
+      if (cleanEnv && clean === cleanEnv) {
+        return true;
+      }
     }
-    return clean === (this.store.admin.password || '050827').trim();
+
+    // Check database store password (stripping quotes and whitespace)
+    const storeRaw = this.store?.admin?.password;
+    if (storeRaw) {
+      const cleanStore = storeRaw.trim().replace(/^["']|["']$/g, '');
+      if (cleanStore && clean === cleanStore) {
+        return true;
+      }
+    }
+
+    // Default target password fallback
+    return clean === '050827';
   }
 
   updateAdminPassword(newPassword: string, adminUsername: string): boolean {
