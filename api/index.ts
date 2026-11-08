@@ -1,5 +1,6 @@
 import { app } from '../server/app';
+import { runExpress } from '../server/serverless';
 
 export default function handler(req: any, res: any) {
-  return app(req, res);
+  return runExpress(app, req, res);
 }

@@ -95,12 +95,28 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
         }
       } else {
         const text = await res.text();
-        throw new Error(`Máy chủ không phản hồi JSON (Mã ${res.status}): ${text.slice(0, 100)}`);
+        if (res.status === 401) {
+          throw new Error('Mật khẩu không chính xác');
+        } else if (res.status === 400) {
+          throw new Error('Vui lòng nhập mật khẩu quản trị viên');
+        } else if (res.status >= 500) {
+          throw new Error('Máy chủ đang gặp sự cố. Vui lòng thử lại sau giây lát.');
+        } else {
+          throw new Error(`Lỗi máy chủ (${res.status}): ${text.slice(0, 80)}`);
+        }
       }
 
       if (!res.ok || !data?.success) {
-        const safeMsg = getErrorMessage(data, 'Mật khẩu không chính xác');
-        throw new Error(safeMsg);
+        if (res.status === 401) {
+          const safeMsg = getErrorMessage(data, 'Mật khẩu không chính xác');
+          throw new Error(safeMsg);
+        } else if (res.status === 400) {
+          const safeMsg = getErrorMessage(data, 'Vui lòng nhập mật khẩu quản trị viên');
+          throw new Error(safeMsg);
+        } else {
+          const safeMsg = getErrorMessage(data, 'Máy chủ đang gặp sự cố. Vui lòng thử lại.');
+          throw new Error(safeMsg);
+        }
       }
 
       // Store token as secondary header fallback (HttpOnly cookie is set by server)

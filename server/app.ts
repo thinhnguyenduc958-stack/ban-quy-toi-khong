@@ -12,20 +12,47 @@ const __dirname = path.dirname(__filename);
 
 export const app = express();
 
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ limit: '15mb', extended: true }));
+// 1. Vercel Serverless Body Stream Safety & URL Rewrite Normalization
+app.use((req: any, _res: any, next: any) => {
+  // If req.body is already parsed (as @vercel/node does), mark it so express.json doesn't hang
+  if (req.body !== undefined && req.body !== null) {
+    req._body = true;
+  }
+
+  // Restore the original URL if Vercel serverless rewrote the path to /api/index
+  const queryPath = req.query?.path || req.query?.originalPath;
+  const forwardedUri = req.headers['x-forwarded-uri'] || req.headers['x-matched-path'] || req.headers['x-original-url'];
+
+  let original = '';
+  if (typeof queryPath === 'string' && queryPath.trim()) {
+    original = '/' + queryPath.trim().replace(/^\//, '');
+  } else if (typeof forwardedUri === 'string' && forwardedUri.startsWith('/')) {
+    original = forwardedUri.split('?')[0];
+  }
+
+  if (original) {
+    req.originalUrl = original;
+    req.url = original;
+  }
+
+  next();
+});
 
 // Global CORS & JSON header guarantee
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-admin-session, x-admin-token');
+  res.header('Access-Control-Allow-Credentials', 'true');
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
     return;
   }
   next();
 });
+
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 import crypto from 'crypto';
 
